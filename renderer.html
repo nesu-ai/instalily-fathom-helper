@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Instalily Fathom Helper</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f8f8fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #1a1a1a;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      padding: 48px 40px;
+      text-align: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+
+    .logo-img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .connection-icon {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #6b7280;
+      line-height: 1.5;
+      margin-bottom: 40px;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .login-btn:hover {
+      background: #2a2a2a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-btn.waiting {
+      background: #6b7280;
+      cursor: not-allowed;
+    }
+
+    .login-btn.success {
+      background: #00beff;
+    }
+
+    .status-icon {
+      width: 20px;
+      height: 20px;
+      display: none;
+    }
+
+    .login-btn.waiting .status-icon,
+    .login-btn.success .status-icon {
+      display: inline-block;
+    }
+
+    .footer {
+      margin-top: 32px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="login-card">
+      <div class="logo-container">
+        <img src="resources/logos/InstaLILY AI Logo.png" alt="Instalily" class="logo-img">
+        <img src="resources/images/chain_link.png" alt="Connect" class="connection-icon">
+        <img src="resources/logos/Fathom Video Logo.png" alt="Fathom" class="logo-img">
+      </div>
+      
+      <h2 class="title">Cosailor Fathom Integration</h2>
+      <p class="subtitle">
+        Sign in to Fathom.video to automatically setup transcript export for Instalily internal Cosailor.
+      </p>
+      
+      <button id="loginBtn" class="login-btn">
+        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4" />
+        </svg>
+        <span id="btnText">Connect to Fathom</span>
+      </button>
+      
+      <p class="footer" id="footerText">
+        You'll be redirected back after signing in
+      </p>
+    </div>
+  </div>
+  
+  <script>
+    const loginBtn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('btnText');
+    const statusIcon = loginBtn.querySelector('.status-icon');
+    
+    // Check if we just completed login
+    const urlParams = new URLSearchParams(window.location.search);
+    const footerText = document.getElementById('footerText');
+    
+    if (urlParams.get('loginComplete') === 'true') {
+      loginBtn.classList.add('success');
+      loginBtn.disabled = true;
+      statusIcon.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>';
+      btnText.innerText = 'Fathom Connected!';
+      footerText.innerText = "That's all! Instalily Fathom Helper will do the rest in the cloud. You may close the app.";
+    }
+    
+    loginBtn.onclick = async () => {
+      loginBtn.classList.add('waiting');
+      loginBtn.disabled = true;
+      
+      // Change to spinner icon
+      statusIcon.innerHTML = '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" transform="rotate(-90 12 12)"/>';
+      statusIcon.classList.add('spinner');
+      btnText.innerText = 'Waiting for login...';
+      
+      try {
+        const result = await window.electronAPI.startLogin();
+        
+        if (result === 'done') {
+          // Change to success state
+          loginBtn.classList.remove('waiting');
+          loginBtn.classList.add('success');
+          statusIcon.classList.remove('spinner');
+          statusIcon.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>';
+          btnText.innerText = 'Fathom Connected!';
+          footerText.innerText = "That's all! Instalily Fathom Helper will do the rest in the cloud. You may close the app.";
+        } else {
+          // Handle timeout or error
+          loginBtn.classList.remove('waiting');
+          loginBtn.classList.remove('success');
+          loginBtn.disabled = false;
+          statusIcon.classList.remove('spinner');
+          btnText.innerText = 'Start Fathom Login';
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        loginBtn.classList.remove('waiting');
+        loginBtn.disabled = false;
+        statusIcon.classList.remove('spinner');
+        btnText.innerText = 'Start Fathom Login';
+      }
+    };
+  </script>
+</body>
+</html>
