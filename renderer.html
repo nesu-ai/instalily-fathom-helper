@@ -143,14 +143,21 @@
       
       <h2 class="title">Cosailor Fathom Integration</h2>
       <p class="subtitle">
-        Sign in to Fathom.video to automatically setup transcript export for Instalily internal Cosailor.
+        Sign in to Google and Fathom.video to automatically setup Google Drive transcript export for Instalily internal Cosailor.
       </p>
       
-      <button id="loginBtn" class="login-btn">
+      <button id="googleBtn" class="login-btn">
         <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 11l3 3L22 4" />
         </svg>
-        <span id="btnText">Connect to Fathom</span>
+        <span id="googleBtnText">Sign in with Google</span>
+      </button>
+      
+      <button id="fathomBtn" class="login-btn" style="display: none; margin-top: 16px;">
+        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4" />
+        </svg>
+        <span id="fathomBtnText">Connect to Fathom</span>
       </button>
       
       <p class="footer" id="footerText">
@@ -160,56 +167,118 @@
   </div>
   
   <script>
-    const loginBtn = document.getElementById('loginBtn');
-    const btnText = document.getElementById('btnText');
-    const statusIcon = loginBtn.querySelector('.status-icon');
-    
-    // Check if we just completed login
-    const urlParams = new URLSearchParams(window.location.search);
+    const googleBtn = document.getElementById('googleBtn');
+    const fathomBtn = document.getElementById('fathomBtn');
+    const googleBtnText = document.getElementById('googleBtnText');
+    const fathomBtnText = document.getElementById('fathomBtnText');
+    const googleStatusIcon = googleBtn.querySelector('.status-icon');
+    const fathomStatusIcon = fathomBtn.querySelector('.status-icon');
     const footerText = document.getElementById('footerText');
     
-    if (urlParams.get('loginComplete') === 'true') {
-      loginBtn.classList.add('success');
-      loginBtn.disabled = true;
-      statusIcon.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>';
-      btnText.innerText = 'Fathom Connected!';
-      footerText.innerText = "That's all! Instalily Fathom Helper will do the rest in the cloud. You may close the app.";
+    // Check URL parameters for status updates
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Handle Google OAuth completion
+    if (urlParams.get('googleAuth') === 'complete') {
+      googleBtn.classList.add('success');
+      googleBtn.disabled = true;
+      googleStatusIcon.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>';
+      googleBtnText.innerText = 'Google Connected!';
+      
+      // Show Fathom button
+      fathomBtn.style.display = 'flex';
+      footerText.innerText = 'Now connect to Fathom to complete the setup';
+    } else if (urlParams.get('googleAuth') === 'error') {
+      googleBtn.classList.remove('waiting');
+      googleBtn.disabled = false;
+      googleStatusIcon.classList.remove('spinner');
+      googleBtnText.innerText = 'Sign in with Google (Retry)';
+      footerText.innerText = 'Google authentication failed. Please try again.';
     }
     
-    loginBtn.onclick = async () => {
-      loginBtn.classList.add('waiting');
-      loginBtn.disabled = true;
+    // Handle Fathom login completion
+    if (urlParams.get('loginComplete') === 'true') {
+      // Show both buttons in success state
+      googleBtn.classList.add('success');
+      googleBtn.disabled = true;
+      googleStatusIcon.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>';
+      googleBtnText.innerText = 'Google Connected!';
+      
+      fathomBtn.style.display = 'flex';
+      fathomBtn.classList.add('success');
+      fathomBtn.disabled = true;
+      fathomStatusIcon.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>';
+      fathomBtnText.innerText = 'Fathom Connected!';
+      footerText.innerText = "Setup complete! Instalily Fathom Helper will do the rest in the cloud. You may close the app.";
+    }
+    
+    // Google OAuth button handler
+    googleBtn.onclick = async () => {
+      googleBtn.classList.add('waiting');
+      googleBtn.disabled = true;
       
       // Change to spinner icon
-      statusIcon.innerHTML = '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" transform="rotate(-90 12 12)"/>';
-      statusIcon.classList.add('spinner');
-      btnText.innerText = 'Waiting for login...';
+      googleStatusIcon.innerHTML = '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" transform="rotate(-90 12 12)"/>';
+      googleStatusIcon.classList.add('spinner');
+      googleBtnText.innerText = 'Waiting for Google sign-in...';
+      footerText.innerText = 'Complete the Google sign-in process';
+      
+      try {
+        const result = await window.electronAPI.startGoogleOAuth();
+        
+        if (result.success) {
+          // Success state handled by URL parameter check above
+          console.log('Google OAuth successful');
+        } else {
+          // Handle error
+          googleBtn.classList.remove('waiting');
+          googleBtn.disabled = false;
+          googleStatusIcon.classList.remove('spinner');
+          googleBtnText.innerText = 'Sign in with Google (Retry)';
+          footerText.innerText = result.error === 'timeout' ? 'Google sign-in timed out. Please try again.' : 'Google sign-in failed. Please try again.';
+        }
+      } catch (error) {
+        console.error('Google OAuth error:', error);
+        googleBtn.classList.remove('waiting');
+        googleBtn.disabled = false;
+        googleStatusIcon.classList.remove('spinner');
+        googleBtnText.innerText = 'Sign in with Google (Retry)';
+        footerText.innerText = 'An error occurred. Please try again.';
+      }
+    };
+    
+    // Fathom login button handler
+    fathomBtn.onclick = async () => {
+      fathomBtn.classList.add('waiting');
+      fathomBtn.disabled = true;
+      
+      // Change to spinner icon
+      fathomStatusIcon.innerHTML = '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" transform="rotate(-90 12 12)"/>';
+      fathomStatusIcon.classList.add('spinner');
+      fathomBtnText.innerText = 'Waiting for Fathom login...';
+      footerText.innerText = 'Complete the Fathom sign-in process';
       
       try {
         const result = await window.electronAPI.startLogin();
         
         if (result === 'done') {
-          // Change to success state
-          loginBtn.classList.remove('waiting');
-          loginBtn.classList.add('success');
-          statusIcon.classList.remove('spinner');
-          statusIcon.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>';
-          btnText.innerText = 'Fathom Connected!';
-          footerText.innerText = "That's all! Instalily Fathom Helper will do the rest in the cloud. You may close the app.";
+          // Success state handled by URL parameter check above
+          console.log('Fathom login successful');
         } else {
           // Handle timeout or error
-          loginBtn.classList.remove('waiting');
-          loginBtn.classList.remove('success');
-          loginBtn.disabled = false;
-          statusIcon.classList.remove('spinner');
-          btnText.innerText = 'Start Fathom Login';
+          fathomBtn.classList.remove('waiting');
+          fathomBtn.disabled = false;
+          fathomStatusIcon.classList.remove('spinner');
+          fathomBtnText.innerText = 'Connect to Fathom (Retry)';
+          footerText.innerText = result === 'timeout' ? 'Fathom login timed out. Please try again.' : 'Fathom login failed. Please try again.';
         }
       } catch (error) {
-        console.error('Login error:', error);
-        loginBtn.classList.remove('waiting');
-        loginBtn.disabled = false;
-        statusIcon.classList.remove('spinner');
-        btnText.innerText = 'Start Fathom Login';
+        console.error('Fathom login error:', error);
+        fathomBtn.classList.remove('waiting');
+        fathomBtn.disabled = false;
+        fathomStatusIcon.classList.remove('spinner');
+        fathomBtnText.innerText = 'Connect to Fathom (Retry)';
+        footerText.innerText = 'An error occurred. Please try again.';
       }
     };
   </script>

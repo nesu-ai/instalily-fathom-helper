@@ -23,3 +23,7 @@ out/
 
 # Electron specific
 *.log 
+
+# OAuth
+oauth/
+credentials/
