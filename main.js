@@ -22,6 +22,9 @@ const admin = require('firebase-admin');
 // Initialize Firebase Admin SDK - will be initialized after app ready
 let db;
 
+// Initialize secure local storage - will be initialized after app ready
+let store;
+
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'your-client-id';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'your-client-secret';
@@ -30,11 +33,90 @@ const REDIRECT_URI = 'http://localhost:8080/oauth/callback';
 // Store current user email for session
 let currentUserEmail = null;
 
+// Check for existing user session and validate with Firestore
+async function checkExistingSession() {
+  if (!store) {
+    console.log('[INFO] Store not initialized yet');
+    return null;
+  }
+  
+  try {
+    // Get stored session
+    const storedSession = store.get('userSession');
+    
+    if (!storedSession || !storedSession.email) {
+      console.log('[INFO] No local session found');
+      return null;
+    }
+    
+    console.log(`[INFO] Found local session for: ${storedSession.email}`);
+    
+    // Check with Firestore if credentials need updating
+    if (db) {
+      try {
+        const userDoc = await db.collection('users').doc(storedSession.email).get();
+        
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          
+          // Check if credentials need updating
+          if (userData.needsUpdatedCredentials === true) {
+            console.log('[INFO] User needs to update credentials, clearing local session');
+            store.delete('userSession');
+            return null;
+          }
+        }
+      } catch (error) {
+        console.error('[ERROR] Failed to check Firestore for credential status:', error);
+        // Continue with local session if Firestore check fails
+      }
+    }
+    
+    // Session is valid
+    currentUserEmail = storedSession.email;
+    
+    return {
+      email: storedSession.email,
+      name: storedSession.name,
+      picture: storedSession.picture,
+      hasGoogleAuth: !!storedSession.googleCredentials,
+      hasFathomAuth: !!storedSession.fathomCookies && storedSession.fathomCookies.length > 0
+    };
+  } catch (error) {
+    console.error('[ERROR] Failed to check existing session:', error);
+    return null;
+  }
+}
 
-function createWindow() {
+// Save user session locally
+async function saveUserSession(userData) {
+  if (!store) {
+    console.log('[WARN] Store not initialized, cannot save session');
+    return;
+  }
+  
+  try {
+    const sessionData = {
+      email: userData.email,
+      name: userData.name,
+      picture: userData.picture,
+      googleCredentials: userData.googleCredentials,
+      fathomCookies: userData.fathomCookies || [],
+      lastUpdated: new Date().toISOString()
+    };
+    
+    store.set('userSession', sessionData);
+    console.log(`[✓] Saved user session locally for: ${userData.email}`);
+  } catch (error) {
+    console.error('[ERROR] Failed to save user session locally:', error);
+  }
+}
+
+async function createWindow() {
   const win = new BrowserWindow({
     width: 600,
-    height: 700,
+    height: 800,
+    icon: path.join(__dirname, 'resources/logos/InstalilyFathomHelperLogo.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -42,28 +124,61 @@ function createWindow() {
     }
   });
 
-  win.loadFile('renderer.html');
+  // Check for existing session before loading
+  const existingSession = await checkExistingSession();
+  
+  if (existingSession) {
+    // Pass session data to renderer via query parameters
+    win.loadFile('renderer.html', { 
+      query: { 
+        sessionData: JSON.stringify(existingSession)
+      } 
+    });
+  } else {
+    win.loadFile('renderer.html');
+  }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     console.log('CLIENT_ID loaded:', process.env.GOOGLE_CLIENT_ID ? 'FOUND' : 'NOT FOUND');
+    
+    // Initialize electron-store
+    try {
+      const Store = (await import('electron-store')).default;
+      store = new Store({
+        encryptionKey: 'instalily-fathom-helper-secure-key', // In production, use a more secure key
+        schema: {
+          userSession: {
+            type: 'object',
+            properties: {
+              email: { type: 'string' },
+              name: { type: 'string' },
+              picture: { type: 'string' },
+              googleCredentials: { type: 'object' },
+              fathomCookies: { type: 'array' },
+              lastUpdated: { type: 'string' }
+            }
+          }
+        }
+      });
+      console.log('[✓] Electron-store initialized successfully');
+    } catch (error) {
+      console.error('[ERROR] Failed to initialize electron-store:', error);
+    }
     
     // Initialize Firebase Admin SDK
     try {
-      const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-      const fullServiceAccountPath = isDev ? 
-        path.join(__dirname, serviceAccountPath) : 
-        path.join(process.resourcesPath, serviceAccountPath);
+      const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
       
-      if (serviceAccountPath && fs.existsSync(fullServiceAccountPath)) {
-        const serviceAccount = require(path.resolve(fullServiceAccountPath));
+      if (serviceAccountJson) {
+        const serviceAccount = JSON.parse(serviceAccountJson);
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount)
         });
         db = admin.firestore();
         console.log('[✓] Firebase initialized successfully');
       } else {
-        console.error('[ERROR] Firebase service account file not found. Please set FIREBASE_SERVICE_ACCOUNT_PATH in .env');
+        console.error('[ERROR] Firebase service account JSON not found. Please set FIREBASE_SERVICE_ACCOUNT_JSON in .env');
       }
     } catch (error) {
       console.error('[ERROR] Failed to initialize Firebase:', error.message);
@@ -129,6 +244,7 @@ ipcMain.handle('start-google-oauth', async (event) => {
             const userData = {
               name: userInfo.data.name,
               email: userInfo.data.email,
+              picture: userInfo.data.picture,
               googleCredentials: tokens,
               createdAt: admin.firestore.FieldValue.serverTimestamp(),
               updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -136,6 +252,9 @@ ipcMain.handle('start-google-oauth', async (event) => {
             
             // Store current user email for later use
             currentUserEmail = userInfo.data.email;
+            
+            // Save user session locally
+            await saveUserSession(userData);
             
             // Save to Firestore if available
             if (db) {
@@ -153,8 +272,19 @@ ipcMain.handle('start-google-oauth', async (event) => {
               console.warn('[WARN] Firestore not initialized, user data not persisted');
             }
             
-            // Navigate back to the app with success parameter
-            mainWindow.loadFile('renderer.html', { query: { googleAuth: 'complete' } });
+            // Navigate back to the app with session data
+            const sessionData = {
+              email: userData.email,
+              name: userData.name,
+              picture: userData.picture,
+              hasGoogleAuth: true,
+              hasFathomAuth: false
+            };
+            mainWindow.loadFile('renderer.html', { 
+              query: { 
+                sessionData: JSON.stringify(sessionData)
+              } 
+            });
             resolve({ success: true, userData });
           } catch (error) {
             console.error('[ERROR] OAuth token exchange failed:', error);
@@ -213,12 +343,23 @@ ipcMain.handle('start-login', async (event) => {
       console.log(`[INFO] Navigated to: ${url}`);
       
       // Check if we've reached the home page (successful login)
-      if (url.includes('fathom.video/home') && !loginDetected) {
+      if ((url.includes('fathom.video/home') || url.includes('fathom.video/onboarding/customize/auto_record')) && !loginDetected) {
         loginDetected = true;
         console.log('[✓] Login successful, capturing cookies...');
         
         // Get cookies from the main session
         const cookies = await session.defaultSession.cookies.get({ domain: '.fathom.video' });
+        
+        // Update local session with Fathom cookies
+        if (store) {
+          const currentSession = store.get('userSession');
+          if (currentSession) {
+            currentSession.fathomCookies = cookies;
+            currentSession.lastUpdated = new Date().toISOString();
+            store.set('userSession', currentSession);
+            console.log(`[✓] Updated local session with ${cookies.length} Fathom cookies`);
+          }
+        }
         
         // Save Fathom session to Firestore
         if (db && currentUserEmail) {
@@ -238,8 +379,24 @@ ipcMain.handle('start-login', async (event) => {
           console.warn('[WARN] Cannot save Fathom session - Firestore not initialized or user email not available');
         }
         
-        // Navigate back to the app with success parameter
-        mainWindow.loadFile('renderer.html', { query: { loginComplete: 'true' } });
+        // Navigate back to the app with updated session data
+        const currentSessionData = store ? store.get('userSession') : null;
+        if (currentSessionData) {
+          const sessionData = {
+            email: currentSessionData.email,
+            name: currentSessionData.name,
+            picture: currentSessionData.picture,
+            hasGoogleAuth: true,
+            hasFathomAuth: true
+          };
+          mainWindow.loadFile('renderer.html', { 
+            query: { 
+              sessionData: JSON.stringify(sessionData)
+            } 
+          });
+        } else {
+          mainWindow.loadFile('renderer.html');
+        }
         resolve('done');
       }
     });
@@ -254,6 +411,17 @@ ipcMain.handle('start-login', async (event) => {
         
         const cookies = await session.defaultSession.cookies.get({ domain: '.fathom.video' });
         
+        // Update local session with Fathom cookies
+        if (store) {
+          const currentSession = store.get('userSession');
+          if (currentSession) {
+            currentSession.fathomCookies = cookies;
+            currentSession.lastUpdated = new Date().toISOString();
+            store.set('userSession', currentSession);
+            console.log(`[✓] Updated local session with ${cookies.length} Fathom cookies`);
+          }
+        }
+        
         // Save Fathom session to Firestore
         if (db && currentUserEmail) {
           try {
@@ -272,7 +440,24 @@ ipcMain.handle('start-login', async (event) => {
           console.warn('[WARN] Cannot save Fathom session - Firestore not initialized or user email not available');
         }
         
-        mainWindow.loadFile('renderer.html');
+        // Navigate back to the app with updated session data
+        const currentSessionData = store ? store.get('userSession') : null;
+        if (currentSessionData) {
+          const sessionData = {
+            email: currentSessionData.email,
+            name: currentSessionData.name,
+            picture: currentSessionData.picture,
+            hasGoogleAuth: true,
+            hasFathomAuth: true
+          };
+          mainWindow.loadFile('renderer.html', { 
+            query: { 
+              sessionData: JSON.stringify(sessionData)
+            } 
+          });
+        } else {
+          mainWindow.loadFile('renderer.html');
+        }
         resolve('done');
       }
     });
@@ -286,4 +471,31 @@ ipcMain.handle('start-login', async (event) => {
       }
     }, 300000);
   });
+});
+
+// IPC Handler: Check current session
+ipcMain.handle('check-session', async () => {
+  return await checkExistingSession();
+});
+
+// IPC Handler: Logout (clear local data only)
+ipcMain.handle('logout', async () => {
+  try {
+    // Clear local session
+    if (store) {
+      store.delete('userSession');
+    }
+    currentUserEmail = null;
+    
+    console.log('[✓] Local session cleared');
+    return { success: true };
+  } catch (error) {
+    console.error('[ERROR] Failed to logout:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Close app
+ipcMain.handle('close-app', () => {
+  app.quit();
 });

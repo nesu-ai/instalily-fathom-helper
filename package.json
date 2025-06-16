@@ -1,5 +1,6 @@
 {
   "name": "instalily-fathom-helper",
+  "productName": "Instalily Fathom Assistant",
   "version": "1.0.0",
   "description": "Login to Fathom.video and setup transcript export for Instalily sales brain.",
   "main": "main.js",
@@ -11,6 +12,7 @@
   "dependencies": {
     "dotenv": "^16.0.0",
     "electron-squirrel-startup": "^1.0.1",
+    "electron-store": "^10.1.0",
     "firebase-admin": "^12.0.0",
     "googleapis": "^131.0.0"
   },
@@ -25,5 +27,25 @@
     "@electron-forge/plugin-fuses": "^7.8.1",
     "@electron/fuses": "^1.8.0",
     "electron": "^29.4.6"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "icon": "build/icon",
+        "extraResource": [".env", "resources"]
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": ["darwin"]
+        },
+        {
+          "name": "@electron-forge/maker-dmg",
+          "config": {
+            "icon": "resources/logos/InstalilyFathomHelperLogo.png"
+          }
+        }
+      ]
+    }
   }
 }
