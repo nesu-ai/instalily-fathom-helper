@@ -28,7 +28,7 @@ let store;
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'your-client-id';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'your-client-secret';
-const REDIRECT_URI = 'http://localhost:8080/oauth/callback';
+const REDIRECT_URI = 'http://localhost:48484/oauth/callback';
 
 // Store current user email for session
 let currentUserEmail = null;
@@ -60,10 +60,28 @@ async function checkExistingSession() {
           const userData = userDoc.data();
           
           // Check if credentials need updating
-          if (userData.needsUpdatedCredentials === true) {
-            console.log('[INFO] User needs to update credentials, clearing local session');
+          if (userData.needsUpdatedGoogleCredentials === true) {
+            console.log('[INFO] User needs to update Google credentials, clearing local session');
             store.delete('userSession');
             return null;
+          }
+          
+          if (userData.needsUpdatedFathomCredentials === true) {
+            console.log('[INFO] User needs to update Fathom credentials, clearing Fathom data only');
+            const currentSession = store.get('userSession');
+            if (currentSession) {
+              // Keep Google auth but clear Fathom data
+              currentSession.fathomCookies = [];
+              store.set('userSession', currentSession);
+              // Return session data indicating Google is connected but Fathom needs reconnection
+              return {
+                email: currentSession.email,
+                name: currentSession.name,
+                picture: currentSession.picture,
+                hasGoogleAuth: !!currentSession.googleCredentials,
+                hasFathomAuth: false
+              };
+            }
           }
         }
       } catch (error) {

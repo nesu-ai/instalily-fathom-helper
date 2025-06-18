@@ -32,7 +32,17 @@
     "forge": {
       "packagerConfig": {
         "icon": "build/icon",
-        "extraResource": [".env", "resources"]
+        "extraResource": [".env", "resources"],
+        "osxSign": {
+          "identity": "Developer ID Application: Anesu Nhamo (RTGGFN589M)",
+          "hardened-runtime": true,
+          "entitlements": "entitlements.plist",
+          "entitlements-inherit": "entitlements.plist"
+        },
+        "osxNotarize": {
+          "tool": "notarytool",
+          "keychainProfile": "APP_SPECIFIC_PASSWORD_FATHOM_HELPER"
+        }
       },
       "makers": [
         {
