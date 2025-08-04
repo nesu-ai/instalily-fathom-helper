@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Harvester</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <!-- Loading Section -->
+    <section id="loading-section" class="section hidden">
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    </section>
+
+    <!-- Login Section -->
+    <section id="login-section" class="section hidden">
+      <div class="login-container">
+        <div class="logo-container">
+          <img src="../icons/icon-48.png" alt="Cookie Harvester" class="logo">
+          <h1>Cookie Harvester</h1>
+          <p>Sign in to harvest platform cookies</p>
+        </div>
+        
+        <button id="google-login-btn" class="google-login-btn">
+          <img src="../icons/google.svg" alt="Google" class="google-icon">
+          Sign in with Google
+        </button>
+      </div>
+    </section>
+
+    <!-- User Section -->
+    <section id="user-section" class="section hidden">
+      <div class="user-container">
+        <!-- User Info -->
+        <div class="user-info">
+          <img id="user-avatar" src="../icons/icon-48.png" alt="User Avatar" class="user-avatar">
+          <div class="user-details">
+            <span id="user-name" class="user-name">Loading...</span>
+            <span id="user-email" class="user-email">Loading...</span>
+          </div>
+          <button id="logout-btn" class="logout-btn">Sign Out</button>
+        </div>
+
+        <!-- Platforms -->
+        <div class="platforms-section">
+          <h2>Platform Cookie Harvesting</h2>
+          <p class="platforms-description">
+            Click a platform below to open its login page and harvest cookies.
+          </p>
+          
+          <div id="platforms-container" class="platforms-container">
+            <!-- Platform buttons will be added dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="popup-simple.js"></script>
+</body>
+</html>

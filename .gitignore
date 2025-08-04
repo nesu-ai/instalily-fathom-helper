@@ -27,3 +27,6 @@ out/
 # OAuth
 oauth/
 credentials/
+
+# Chrome Extension Private Key
+extension-packing-private-key.pem

@@ -1,61 +1,20 @@
 {
-  "name": "instalily-fathom-helper",
-  "productName": "Instalily Fathom Assistant",
+  "name": "instalily-meeting-notes-helper",
   "version": "1.0.0",
-  "description": "Login to Fathom.video and setup transcript export for Instalily sales brain.",
-  "main": "main.js",
+  "description": "Chrome extension to sync meeting notes from various platforms to Instalily",
+  "private": true,
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
-  },
-  "dependencies": {
-    "dotenv": "^16.0.0",
-    "electron-squirrel-startup": "^1.0.1",
-    "electron-store": "^10.1.0",
-    "firebase-admin": "^12.0.0",
-    "googleapis": "^131.0.0"
+    "build": "webpack --mode=production",
+    "dev": "webpack --mode=development --watch",
+    "clean": "rm -rf chrome-extension/background/service-worker.js"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.8.1",
-    "@electron-forge/maker-deb": "^7.8.1",
-    "@electron-forge/maker-dmg": "^7.8.1",
-    "@electron-forge/maker-rpm": "^7.8.1",
-    "@electron-forge/maker-squirrel": "^7.8.1",
-    "@electron-forge/maker-zip": "^7.8.1",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.8.1",
-    "@electron-forge/plugin-fuses": "^7.8.1",
-    "@electron/fuses": "^1.8.0",
-    "electron": "^29.4.6"
+    "copy-webpack-plugin": "^11.0.0",
+    "dotenv": "^17.2.1",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.4"
   },
-  "config": {
-    "forge": {
-      "packagerConfig": {
-        "icon": "build/icon",
-        "extraResource": [".env", "resources"],
-        "osxSign": {
-          "identity": "Developer ID Application: Anesu Nhamo (RTGGFN589M)",
-          "hardened-runtime": true,
-          "entitlements": "entitlements.plist",
-          "entitlements-inherit": "entitlements.plist"
-        },
-        "osxNotarize": {
-          "tool": "notarytool",
-          "keychainProfile": "APP_SPECIFIC_PASSWORD_FATHOM_HELPER"
-        }
-      },
-      "makers": [
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": ["darwin"]
-        },
-        {
-          "name": "@electron-forge/maker-dmg",
-          "config": {
-            "icon": "resources/logos/InstalilyFathomHelperLogo.png"
-          }
-        }
-      ]
-    }
+  "dependencies": {
+    "firebase": "^10.12.0"
   }
 }

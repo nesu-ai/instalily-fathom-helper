@@ -1,0 +1,145 @@
+INSTALILY MEETING NOTES HELPER - PRIVACY POLICY
+
+Last Updated: August 4, 2025
+
+1. INTRODUCTION
+
+Instalily Meeting Notes Helper ("the Extension") is a Chrome extension that connects AI notetaking platforms (Fathom, Circleback) to Instalily's Cosailor platform. This privacy policy explains how we collect, use, and protect your information.
+
+2. INFORMATION WE COLLECT
+
+2.1 Google Account Information
+- Email address
+- Name  
+- Profile picture
+- OAuth access tokens for authentication
+
+2.2 Platform Authentication Data
+- Authentication cookies from connected AI notetaking services (Fathom, Circleback)
+- Login session information  
+- Platform connection status
+- Cookie expiration and refresh status
+
+2.3 Usage Information
+- Extension settings and preferences
+- Connection history and status
+- Error logs for troubleshooting
+
+3. HOW WE USE YOUR INFORMATION
+
+3.1 Core Functionality
+- Authenticate with your Google account using OAuth 2.0
+- Establish secure connections to AI notetaking platforms
+- Harvest authentication cookies to maintain platform sessions
+- Store connection status and user preferences
+- Enable cookie refresh when sessions expire
+
+3.2 Service Improvement
+- Monitor connection reliability and success rates
+- Troubleshoot authentication and connection issues
+- Improve extension functionality and user experience
+
+4. DATA STORAGE AND SECURITY
+
+4.1 Local Storage (Browser)
+- OAuth tokens cached locally for session management
+- Platform connection status and preferences
+- Temporary authentication data during connection process
+
+4.2 Cloud Storage (Google Firestore)
+- User profile information (email, name, picture)
+- Platform connection status and metadata
+- Authentication cookie data for maintaining sessions
+- All data encrypted in transit and at rest
+
+4.3 Security Measures
+- All data transmission uses HTTPS encryption
+- OAuth 2.0 for secure Google authentication
+- Access tokens automatically expire and refresh
+- No passwords stored by the extension
+- Authentication cookies handled securely and not exposed
+
+5. DATA SHARING
+
+5.1 We DO NOT share your data with third parties except:
+- Google Firestore (for secure data storage and user authentication)
+- The original AI notetaking platforms (only to maintain your authorized sessions)
+- Instalily's Cosailor platform (for integration purposes as intended by user)
+
+5.2 We DO NOT:
+- Sell your personal information
+- Share authentication data with unauthorized parties
+- Use your data for advertising purposes
+- Access more data than necessary for core functionality
+- Share cookies with platforms other than their origin
+
+6. YOUR RIGHTS AND CHOICES
+
+6.1 Access and Control
+- Connect/disconnect platforms at any time through the extension
+- View connection status and history
+- Refresh expired authentication sessions
+- Control which platforms are connected
+
+6.2 Data Deletion
+- Disconnect platforms to stop data collection
+- Uninstalling the extension removes all local data
+- Contact us to request cloud data deletion
+- Platform connections can be revoked individually
+
+7. COOKIES AND AUTHENTICATION
+
+7.1 We collect authentication cookies from AI notetaking platforms solely for:
+- Maintaining authenticated sessions with your consent
+- Detecting successful logins and connection status
+- Refreshing expired sessions to maintain connectivity
+- Enabling seamless integration with Instalily's Cosailor
+
+7.2 We do NOT use cookies for:
+- Advertising, marketing, or tracking purposes
+- Cross-site tracking or analytics
+- Any purpose beyond maintaining authorized platform connections
+
+8. CHILDREN'S PRIVACY
+
+This extension is not intended for users under 13 years of age. We do not knowingly collect personal information from children under 13.
+
+9. USER CONSENT AND CONTROL
+
+9.1 Explicit Consent Required
+- Users must explicitly connect each platform through authentication flow
+- Clear indication when authentication cookies are being collected
+- Users can disconnect platforms at any time
+- No background or automatic data collection
+
+9.2 Transparency
+- Clear indication of connected vs. disconnected platforms
+- Status indicators for cookie expiration and refresh needs
+- User-initiated actions for all data collection
+
+10. CHANGES TO THIS POLICY
+
+We may update this privacy policy to reflect changes in our practices or legal requirements. Updates will be posted with a new "Last Updated" date. Continued use of the extension after updates constitutes acceptance of changes.
+
+11. CONTACT INFORMATION
+
+For questions about this privacy policy or our data practices:
+
+Email: privacy@instalily.ai
+Company: Instalily
+Website: https://instalily.ai
+
+12. COMPLIANCE
+
+This extension complies with:
+- Google Chrome Web Store Developer Policies
+- OAuth 2.0 security standards and best practices
+- General data protection principles (GDPR-inspired)
+- Industry standard security practices for browser extensions
+- Chrome Extension Manifest V3 security requirements
+
+13. LIMITATION OF LIABILITY
+
+The extension processes authentication data solely for platform connection functionality. Users remain responsible for maintaining the security of their individual platform accounts and any content accessible through those connections.
+
+By using Instalily Meeting Notes Helper, you consent to this privacy policy and our data practices as described above.

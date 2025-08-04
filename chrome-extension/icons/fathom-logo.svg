@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="logosandtypes_com" data-name="logosandtypes com" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: #00beff;
+      }
+
+      .cls-2 {
+        isolation: isolate;
+        opacity: .5;
+      }
+
+      .cls-3 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g id="Layer_3" data-name="Layer 3">
+    <g id="Layer_3-2" data-name="Layer 3-2">
+      <g id="Layer_2" data-name="Layer 2">
+        <path id="Layer_3-3" data-name="Layer 3-3" class="cls-3" d="M0,0H150V150H0V0Z"/>
+      </g>
+    </g>
+  </g>
+  <path class="cls-1" d="M113.08,85.46L26.9,38.39c-7.96-4.64-10.61-13.92-5.96-21.88,4.64-7.29,14.58-9.94,22.54-5.96l86.18,47.07c7.96,4.64,10.61,13.92,5.97,21.88-3.98,7.96-14.58,10.61-22.54,5.97h0Z"/>
+  <path class="cls-1" d="M73.31,113.96l-45.74-25.19c-7.96-4.64-10.61-13.92-5.97-21.88,4.64-7.29,14.58-9.94,22.54-5.96l45.74,25.19c7.95,4.64,10.6,13.92,5.96,21.88-4.64,7.29-14.58,9.94-22.54,5.96h0Z"/>
+  <path class="cls-2" d="M19.34,124.73v-49.06c0-9.28,7.29-16.57,16.57-16.57s16.57,7.29,16.57,16.57v49.06c0,9.28-7.29,16.57-16.57,16.57s-16.57-7.29-16.57-16.57h0Z"/>
+</svg>
